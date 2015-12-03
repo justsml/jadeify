@@ -71,6 +71,7 @@ specify("It can be configured with package.json", function (done) {
 specify("It can handle functions using `self` instead of `locals`", function (done) {
     testOutputMatches("test10", done, {
         static: true,
+        runtimePath: "./jade-runtime",
         locals: { foo: function () {return "FOO!";} }
     });
 });
