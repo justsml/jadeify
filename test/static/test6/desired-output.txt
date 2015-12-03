@@ -1,0 +1,1 @@
+<h1>Jade</h1><p>some content</p><p ng-if="that === 'all'">That is all folks</p><p ng-if="that !== 'all'">That is NOT all folks</p>

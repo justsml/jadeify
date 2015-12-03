@@ -2,4 +2,4 @@
 
 var template = require("./template.jade");
 
-document.body.innerHTML = template;
+document.body.innerHTML = template();

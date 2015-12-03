@@ -2,6 +2,4 @@
 
 var template = require("./template.jade");
 
-document.body.innerHTML = template({
-    foo: function () { return "FOO!"; }
-});
+document.body.innerHTML = template;

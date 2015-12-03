@@ -1,3 +1,5 @@
 "use strict";
 
-var template = require("./template.jade")({});
+var template = require("./template.jade");
+
+document.body.innerHTML = template;
