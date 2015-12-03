@@ -7,6 +7,7 @@ var concatStream = require("concat-stream");
 var browserify = require("browserify");
 var jsdom = require("jsdom").jsdom;
 var jadeify = require("..");
+var currentPath;
 
 function stuffPath(fileName) {
     return path.resolve(__dirname, "stuff", fileName);
@@ -19,8 +20,10 @@ function prepareBundle(jsEntryName, bundleOptions, preparationOptions) {
         bundle = bundle.transform(jadeify, bundleOptions);
     }
 
-    return bundle.add(stuffPath(jsEntryName));
+    return bundle.add(currentPath(jsEntryName));
 }
+
+currentPath = stuffPath;
 
 specify("It gives the desired output", function (done) {
     testOutputMatches("test1", done);
@@ -49,12 +52,70 @@ specify("It should emit all files in dependency tree", function (done) {
     testFileEmit("test6", done, { self: true });
 });
 
+/*
+ * The pre-compile mode tests {static: true}
+ */
+specify("It gives the desired output", function (done) {
+    testOutputMatches("test7", done, {static: true,
+        locals: { pageTitle: "Jade", youAreUsingJade: true }
+    });
+});
+specify("It emits stream error when Jade fails to process template", function (done) {
+    testOutputErrors("test8", done, {static: true});
+});
+specify("It can be configured with package.json", function (done) {
+    testOutputMatches("test9", done, undefined, {
+        static: true,
+        dontTransform: true,
+        locals: {
+            foo: function () { return "FOO!"; }
+        }
+    });
+});
+specify("It can handle functions using `self` instead of `locals`", function (done) {
+    testOutputMatches("test10", done, {
+        static: true,
+        locals: {
+            foo: function () { return "FOO!"; }
+        }
+    });
+});
+specify("It uses options from js", function (done) {
+    testOutputMatches("test11", done, {
+        static: true,
+        self: true,
+        locals: {
+            foo: function () { return "FOO!"; }
+        }
+    });
+});
+specify("It should emit all files in dependency tree", function (done) {
+    testFileEmit("test12", done, {
+        static: true,
+        self: true,
+        locals: {
+            foo: function () { return "FOO!"; }
+        }
+    });
+});
+specify("It should handle included Jade correctly", function (done) {
+    testOutputMatches("test12", done, {
+        static: true,
+        self: false,
+        locals: {
+            pageTitle: "Jade",
+            youAreUsingJade: true,
+            foo: function () { return "FOO!"; }
+        }
+    });
+});
+
 function testOutputMatches(testDir, done, bundleOptions, preparationOptions) {
-    process.chdir(stuffPath(testDir));
+    process.chdir(currentPath(testDir));
 
     var bundleStream = prepareBundle(testDir + "/entry.js", bundleOptions, preparationOptions).bundle();
-    var pageHtml = fs.readFileSync(stuffPath(testDir + "/index.html"), "utf8");
-    var desiredOutput = fs.readFileSync(stuffPath(testDir + "/desired-output.txt"), "utf8").trim();
+    var pageHtml = fs.readFileSync(currentPath(testDir + "/index.html"), "utf8");
+    var desiredOutput = fs.readFileSync(currentPath(testDir + "/desired-output.txt"), "utf8").trim();
 
     bundleStream.pipe(concatStream(function (bundleJs) {
         var window = jsdom(pageHtml).defaultView;
@@ -70,7 +131,7 @@ function testOutputMatches(testDir, done, bundleOptions, preparationOptions) {
 }
 
 function testOutputErrors(testDir, done) {
-    process.chdir(stuffPath(testDir));
+    process.chdir(currentPath(testDir));
 
     var bundle = prepareBundle(testDir + "/entry.js");
     var stream = bundle.bundle();
@@ -86,7 +147,7 @@ function testOutputErrors(testDir, done) {
 }
 
 function testFileEmit(testDir, done) {
-    process.chdir(stuffPath(testDir));
+    process.chdir(currentPath(testDir));
 
     var bundle = prepareBundle(testDir + "/entry.js");
     var stream = bundle.bundle();
