@@ -1,0 +1,7 @@
+{
+    "browserify": {
+        "transform": [
+            ["../../../", { "static": true, "locals": {"foo": "BAR!"} }]
+        ]
+    }
+}

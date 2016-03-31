@@ -1,7 +1,7 @@
 "use strict";
 
 var fs = require("fs");
-var path = require("path")
+var path = require("path");
 var assert = require("assert");
 var concatStream = require("concat-stream");
 var browserify = require("browserify");
@@ -47,6 +47,56 @@ specify("It uses options from js", function (done) {
 
 specify("It should emit all files in dependency tree", function (done) {
     testFileEmit("test6", done, { self: true });
+});
+
+/*
+ * The pre-compile mode tests {static: true}
+ */
+specify("It gives the desired output", function (done) {
+    testOutputMatches("test7", done, {
+        static: true,
+        locals: { pageTitle: "Jade", youAreUsingJade: true }
+    });
+});
+specify("It emits stream error when Jade fails to process template", function (done) {
+    testOutputErrors("test8", done, {static: true});
+});
+specify("It can be configured with package.json", function (done) {
+    testOutputMatches("test9", done, undefined, {
+        static: true,
+        dontTransform: true,
+        locals: { foo: function () {return "FOO!";} }
+    });
+});
+specify("It can handle functions using `self` instead of `locals`", function (done) {
+    testOutputMatches("test10", done, {
+        static: true,
+        runtimePath: "./jade-runtime",
+        locals: { foo: function () {return "FOO!";} }
+    });
+});
+specify("It uses options from js", function (done) {
+    testOutputMatches("test11", done, {
+        static: true,
+        self: true,
+        locals: { foo: function () {return "FOO!";} }
+    });
+});
+specify("It should emit all files in dependency tree", function (done) {
+    testFileEmit("test12", done, {
+        static: true,
+        self: true,
+        locals: { foo: function () {return "FOO!";} }
+    });
+});
+specify("It should handle included Jade correctly", function (done) {
+    testOutputMatches("test12", done, {
+        static: true,
+        self: false,
+        locals: {
+            pageTitle: "Jade",
+            youAreUsingJade: true, foo: function () {return "FOO!";} }
+    });
 });
 
 function testOutputMatches(testDir, done, bundleOptions, preparationOptions) {
